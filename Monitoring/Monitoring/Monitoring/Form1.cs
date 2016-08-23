@@ -2,15 +2,17 @@
 using System.Windows.Forms;
 using System.IO;
 using System.Collections;
+using System.ComponentModel;
 using GemBox.Spreadsheet;
 using System.Linq;
 using System.Diagnostics;
+using System.Windows.Forms.VisualStyles;
 
 namespace Monitoring
 {
     public partial class Monitoring : Form
     {
-        
+        private ContextMenuStrip rayonsContextMenu;
         ArrayList list = new ArrayList();
         int rowNum = 40;  // Кол-во строк в файле
         int rowOffset = 5; // Смещение нужных строк в файле
@@ -23,10 +25,38 @@ namespace Monitoring
         public Monitoring()
         {
             InitializeComponent();
+            rayonsContextMenu = new ContextMenuStrip();
+            rayonsContextMenu.Opening += new CancelEventHandler(rayonsContextMenu_Opening);
+            rayonsContextMenu.ItemClicked += new ToolStripItemClickedEventHandler(rayonsContextMenu_Del);
+            Rayons.ContextMenuStrip = rayonsContextMenu;
             AddFiles.Click += AddFiles_Click;
             Check.Click += CheckAndReporting;
         }
 
+        private void listBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                //select the item under the mouse pointer
+                Rayons.SelectedIndex = Rayons.IndexFromPoint(e.Location);
+                if (Rayons.SelectedIndex != -1)
+                {
+                    rayonsContextMenu.Show();
+                }
+            }
+        }
+        void rayonsContextMenu_Del(object sender, ToolStripItemClickedEventArgs e)
+        {
+            ToolStripItem item = e.ClickedItem;
+            Rayons.Items.Remove(Rayons.SelectedItem);
+            list.Remove(list.Co);
+        }
+        private void rayonsContextMenu_Opening(object sender, CancelEventArgs e)
+        {
+            //clear the menu and add custom items
+            rayonsContextMenu.Items.Clear();
+            rayonsContextMenu.Items.Add(string.Format("Удалить - {0}", Rayons.SelectedItem.ToString()));
+        }
         public void AddFiles_Click(object sender, System.EventArgs e)
         {
             // Displays an OpenFileDialog so the user can select a Cursor.
@@ -45,7 +75,27 @@ namespace Monitoring
                 {
                     Rayons.Items.Add(Path.GetFileName(file));
                     list.Add(file);
-                    list.Sort();
+                    
+                }
+                list.Sort();
+                if (dayReportRB.Checked)
+                {
+                    fileCount.Text = Rayons.Items.Count.ToString() + @" \ 26";
+                }
+                else
+                {
+                    fileCount.Text = Rayons.Items.Count.ToString() + @" \ 2";
+                }
+                if ((Rayons.Items.Count == 26) && (dayReportRB.Checked))
+                {
+                    Check.Enabled = true;
+                }
+                else
+                {
+                    if ((Rayons.Items.Count == 2) && (w2w.Checked))
+                    {
+                        Check.Enabled = true;
+                    }
                 }
             }
         }
@@ -184,6 +234,95 @@ namespace Monitoring
             }
             oFile.Save(dayOutPath);
         }
+
+        public void CheckFile()
+        {
+            int[] stat_col = new int[] { 8, 17, 26, 39, 44, 47 };
+            int i, j, k;
+            bool flag = false;
+            foreach (String file in list)
+            {
+                SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
+                ExcelFile ef = ExcelFile.Load(file);
+                ExcelWorksheet ws = ef.Worksheets.ActiveWorksheet;
+                TreeNode efile = new TreeNode(Path.GetFileName(file));
+
+                for (i = 5; i < 45; i++)
+                {
+                    for (j = 2; j < 48; j++)
+                    {
+                        var numberFormat = ws.Cells[i, j].Style.NumberFormat;
+                        if ((numberFormat != "0.00") && (numberFormat != "#,##0.00"))
+                        {
+                            if (String.IsNullOrEmpty(ws.Cells[i, j].GetFormattedValue()))
+                            {
+                            }
+                            else
+                            {
+                                flag = true;
+                                efile.Nodes.Add("Ячейка [R" + (i + 1) + "C" + (j + 1) + "] имеет не числовой формат. Измените формат ячейки и повторите попытку.");
+                            }
+                        }
+                    }
+                }
+                for (k = stat_col.GetLowerBound(0); k <= stat_col.GetUpperBound(0); k++)
+                {
+                    if (k == stat_col.GetLowerBound(0)) { i = 2; }
+                    else
+                    {
+                        if (k == stat_col.GetUpperBound(0))
+                        {
+                            i = stat_col[k - 1] + 1;
+                        }
+                        else { i = stat_col[k - 1] + 3; }
+                    }
+                    while (i < stat_col[k])
+                    {
+                        for (j = 5; j < 45; j++)
+                        {
+                            string Min = ws.Cells[j, i].GetFormattedValue();
+                            string Max = ws.Cells[j, i + 1].GetFormattedValue();
+                            string Min_s = "[R" + (j + 1) + "C" + (i + 1) + "]";
+                            string Max_s = "[R" + (j + 1) + "C" + (i + 2) + "]";
+                            if ((String.IsNullOrEmpty(Min)) || String.IsNullOrEmpty(Max))
+                            {
+                                if ((String.IsNullOrEmpty(Min)) && String.IsNullOrEmpty(Max)) { }
+                                else
+                                {
+                                    flag = true;
+                                    efile.Nodes.Add(
+                                        new TreeNode("Пустой минимум или максимум. Ячейка мин." + Min_s +
+                                                     " , ячейка макс." + Max_s));
+                                }
+                            }
+                            else
+                            {
+                                if (float.Parse(Min) > float.Parse(Max))
+                                {
+                                    flag = true;
+                                    efile.Nodes.Add(new TreeNode("Минимум больше максимума. Ячейка мин." + Min_s + " , ячейка макс." + Max_s));
+                                }
+                            }
+                        }
+                        i = i + 2;
+                    }
+
+                }
+                if (flag == false)
+                {
+                    efile.Nodes.Add(new TreeNode("Ошибок нет"));
+                    Errors.Nodes.Add(efile);
+                    Errors.ExpandAll();
+                }
+                else
+                {
+                    MessageBox.Show("В ходе проверки файлов обнаружены ошибки. Список ошибок приведен ниже.");
+                    Errors.Nodes.Add(efile);
+                    Errors.ExpandAll();
+                }
+
+            }
+        }
        
         public void CheckAndReporting(object sender, System.EventArgs e)
         {
@@ -193,80 +332,8 @@ namespace Monitoring
             }
             else
             {
-                int[] stat_col = new int[] { 8, 17, 26, 39, 44, 47};
-                int i, j, k;
-                bool flag = false;
-                foreach (String file in list)
-                {
-                    SpreadsheetInfo.SetLicense("");
-                    ExcelFile ef = ExcelFile.Load(file);
-                    ExcelWorksheet ws = ef.Worksheets.ActiveWorksheet;
-                    TreeNode efile = new TreeNode(Path.GetFileName(file));
-
-                    for (i = 5; i < 45; i++)
-                    {
-                        for (j = 2; j < 48; j++)
-                        {
-                            ws.Cells[i, j].Style.NumberFormat = "0.00";
-                        }
-                    }
-                    for (k = stat_col.GetLowerBound(0); k <= stat_col.GetUpperBound(0); k++)
-                    {
-                        if (k == stat_col.GetLowerBound(0)) { i = 2; }
-                        else
-                        {
-                            if (k == stat_col.GetUpperBound(0))
-                            {
-                                i = stat_col[k - 1] + 1;
-                            }
-                            else { i = stat_col[k - 1] + 3; }
-                        }
-                        while (i < stat_col[k])
-                        {
-                            for (j = 5; j < 45; j++)
-                            {
-                                string Min = ws.Cells[j, i].GetFormattedValue();
-                                string Max = ws.Cells[j, i + 1].GetFormattedValue();
-                                string Min_s = "[R" + (j + 1) + "C" + (i + 1) + "]";
-                                string Max_s = "[R" + (j + 1) + "C" + (i + 2) + "]";
-                                if ((String.IsNullOrEmpty(Min)) || String.IsNullOrEmpty(Max))
-                                {
-                                    if ((String.IsNullOrEmpty(Min)) && String.IsNullOrEmpty(Max))
-                                    {
-                                    }
-                                    else
-                                    {
-                                        flag = true;
-                                        efile.Nodes.Add(new TreeNode("Пустой минимум или максимум. Ячейка мин." + Min_s + " , ячейка макс." + Max_s));
-
-                                    }
-                                }
-                                else
-                                {
-                                    if (float.Parse(Min) > float.Parse(Max))
-                                    {
-                                        flag = true;
-                                        efile.Nodes.Add(new TreeNode("Минимум больше максимума. Ячейка мин." + Min_s + " , ячейка макс." + Max_s));
-                                    }
-                                }
-
-                            }
-
-                            i = i + 2;
-                        }
-
-                    }
-                    if (flag == false)
-                    {
-                        efile.Nodes.Add(new TreeNode("Ошибок нет"));
-                        Errors.Nodes.Add(efile);
-                    }
-                    else { Errors.Nodes.Add(efile); }
-                   // ef.Save(file);
-               }
-                //DailyReport();
-                WeekReport();
-               // WriteColumn(2, AvgDaySum(8), dayOutTemplates);
+                CheckFile();
+                
             }
 
             }

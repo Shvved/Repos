@@ -34,10 +34,13 @@ namespace Monitoring
         {
             this.AddFiles = new System.Windows.Forms.Button();
             this.Check = new System.Windows.Forms.Button();
-            this.Wednesday = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.Rayons = new System.Windows.Forms.ListBox();
             this.Errors = new System.Windows.Forms.TreeView();
+            this.dayReportRB = new System.Windows.Forms.RadioButton();
+            this.w2w = new System.Windows.Forms.RadioButton();
+            this.fileCount = new System.Windows.Forms.Label();
+            this.errorMessage = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // AddFiles
@@ -52,22 +55,13 @@ namespace Monitoring
             // Check
             // 
             this.Check.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Check.Location = new System.Drawing.Point(394, 5);
+            this.Check.Enabled = false;
+            this.Check.Location = new System.Drawing.Point(508, 5);
             this.Check.Name = "Check";
             this.Check.Size = new System.Drawing.Size(93, 23);
             this.Check.TabIndex = 2;
             this.Check.Text = "Создать отчёт";
             this.Check.UseVisualStyleBackColor = true;
-            // 
-            // Wednesday
-            // 
-            this.Wednesday.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.Wednesday.Location = new System.Drawing.Point(490, 5);
-            this.Wednesday.Name = "Wednesday";
-            this.Wednesday.Size = new System.Drawing.Size(89, 23);
-            this.Wednesday.TabIndex = 3;
-            this.Wednesday.Text = "Среда к среде";
-            this.Wednesday.UseVisualStyleBackColor = true;
             // 
             // openFileDialog1
             // 
@@ -92,14 +86,56 @@ namespace Monitoring
             this.Errors.Size = new System.Drawing.Size(600, 211);
             this.Errors.TabIndex = 6;
             // 
+            // dayReportRB
+            // 
+            this.dayReportRB.AutoSize = true;
+            this.dayReportRB.Checked = true;
+            this.dayReportRB.Location = new System.Drawing.Point(232, 8);
+            this.dayReportRB.Name = "dayReportRB";
+            this.dayReportRB.Size = new System.Drawing.Size(100, 17);
+            this.dayReportRB.TabIndex = 7;
+            this.dayReportRB.TabStop = true;
+            this.dayReportRB.Text = "Дневной отчет";
+            this.dayReportRB.UseVisualStyleBackColor = true;
+            // 
+            // w2w
+            // 
+            this.w2w.AutoSize = true;
+            this.w2w.Location = new System.Drawing.Point(339, 8);
+            this.w2w.Name = "w2w";
+            this.w2w.Size = new System.Drawing.Size(99, 17);
+            this.w2w.TabIndex = 8;
+            this.w2w.Text = "Среда к Среде";
+            this.w2w.UseVisualStyleBackColor = true;
+            // 
+            // fileCount
+            // 
+            this.fileCount.AutoSize = true;
+            this.fileCount.Location = new System.Drawing.Point(91, 10);
+            this.fileCount.Name = "fileCount";
+            this.fileCount.Size = new System.Drawing.Size(36, 13);
+            this.fileCount.TabIndex = 9;
+            // 
+            // errorMessage
+            // 
+            this.errorMessage.AutoSize = true;
+            this.errorMessage.ForeColor = System.Drawing.Color.Red;
+            this.errorMessage.Location = new System.Drawing.Point(9, 208);
+            this.errorMessage.Name = "errorMessage";
+            this.errorMessage.Size = new System.Drawing.Size(0, 13);
+            this.errorMessage.TabIndex = 10;
+            // 
             // Monitoring
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(604, 436);
+            this.Controls.Add(this.errorMessage);
+            this.Controls.Add(this.fileCount);
+            this.Controls.Add(this.w2w);
+            this.Controls.Add(this.dayReportRB);
             this.Controls.Add(this.Errors);
             this.Controls.Add(this.Rayons);
-            this.Controls.Add(this.Wednesday);
             this.Controls.Add(this.Check);
             this.Controls.Add(this.AddFiles);
             this.MaximumSize = new System.Drawing.Size(620, 700);
@@ -107,6 +143,7 @@ namespace Monitoring
             this.Name = "Monitoring";
             this.Text = "Мониторинг";
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -114,10 +151,13 @@ namespace Monitoring
         #endregion
         private System.Windows.Forms.Button AddFiles;
         private System.Windows.Forms.Button Check;
-        private System.Windows.Forms.Button Wednesday;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private ListBox Rayons;
         private TreeView Errors;
+        private RadioButton dayReportRB;
+        private RadioButton w2w;
+        private Label fileCount;
+        private Label errorMessage;
     }
 }
 
