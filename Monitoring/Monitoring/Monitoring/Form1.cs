@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using GemBox.Spreadsheet;
 using System.Linq;
@@ -12,50 +13,119 @@ namespace Monitoring
 {
     public partial class Monitoring : Form
     {
-        private ContextMenuStrip rayonsContextMenu;
+        private ContextMenuStrip ContextMenu;
         ArrayList list = new ArrayList();
+        ArrayList weekList = new ArrayList();
+        ArrayList prevWeekList = new ArrayList();
+        ArrayList curWeekList = new ArrayList();
         int rowNum = 40;  // Кол-во строк в файле
         int rowOffset = 5; // Смещение нужных строк в файле
         static string outPathDay = Directory.GetCurrentDirectory() + @"\day_out\";
         static string outPathWeek = Directory.GetCurrentDirectory() + @"\week_out\";
+        static string outPathOver10 = Directory.GetCurrentDirectory() + @"\over10_out\";
         string dayOutTemplates = Directory.GetCurrentDirectory() + @"\templates\day_report.xlsx";
         string weekOutTemplates = Directory.GetCurrentDirectory() + @"\templates\week_report.xlsx";
+        string over10OutTemplates = Directory.GetCurrentDirectory() + @"\templates\over10_report.xlsx";
         string dayOutPath = outPathDay + "day_" + DateTime.Now.ToString("dd.MM.yyyy") + ".xlsx";
         string weekOutPath = outPathWeek + "week_" + DateTime.Now.ToString("dd.MM.yyyy") + ".xlsx";
+        string over10OutPath = outPathOver10 + "over_10" + DateTime.Now.ToString("dd.MM.yyyy") + ".xlsx";
         public Monitoring()
         {
             InitializeComponent();
-            rayonsContextMenu = new ContextMenuStrip();
-            rayonsContextMenu.Opening += new CancelEventHandler(rayonsContextMenu_Opening);
-            rayonsContextMenu.ItemClicked += new ToolStripItemClickedEventHandler(rayonsContextMenu_Del);
-            Rayons.ContextMenuStrip = rayonsContextMenu;
+            ContextMenu = new ContextMenuStrip();
+            ContextMenu.Opening += new CancelEventHandler(ContextMenu_Opening);
+            ContextMenu.ItemClicked += new ToolStripItemClickedEventHandler(ContextMenu_Del);
+
+            Rayons.MouseDown += listBox1_MouseDown;
+            wednesdayReports.MouseDown += listBox1_MouseDown;
+            prevWeek.MouseDown += listBox1_MouseDown;
+            curWeek.MouseDown += listBox1_MouseDown;
+
+            Rayons.ContextMenuStrip = ContextMenu;
+            wednesdayReports.ContextMenuStrip = ContextMenu;
+            prevWeek.ContextMenuStrip = ContextMenu;
+            curWeek.ContextMenuStrip = ContextMenu;
+
             AddFiles.Click += AddFiles_Click;
             Check.Click += CheckAndReporting;
+            AddWeekFiles.Click += AddFiles_Click;
+            prevWeekBtn.Click += AddFiles_Click;
+            curWeekBtn.Click += AddFiles_Click;
+            over10Report.Click += Over10Report_Click;
+            weekReportBtn.Click += weekReportBtn_Click;
+           
         }
 
-        private void listBox1_MouseDown(object sender, MouseEventArgs e)
+       private void listBox1_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
-                //select the item under the mouse pointer
-                Rayons.SelectedIndex = Rayons.IndexFromPoint(e.Location);
-                if (Rayons.SelectedIndex != -1)
+                switch (((ListBox)sender).Name)
                 {
-                    rayonsContextMenu.Show();
+                    case "Rayons":
+                        Rayons.SelectedIndex = Rayons.IndexFromPoint(e.Location);
+                        if (Rayons.SelectedIndex != -1)
+                        {
+                            ContextMenu.Show();
+                        }
+                        break;
+                    case "wednesdayReports":
+                        wednesdayReports.SelectedIndex = wednesdayReports.IndexFromPoint(e.Location);
+                        if (wednesdayReports.SelectedIndex != -1)
+                        {
+                            ContextMenu.Show();
+                        }
+                        break;
+                    case "prevWeek":
+                        prevWeek.SelectedIndex = prevWeek.IndexFromPoint(e.Location);
+                        if (prevWeek.SelectedIndex != -1)
+                        {
+                            ContextMenu.Show();
+                        }
+                        break;
+                    case "curWeek":
+                        curWeek.SelectedIndex = curWeek.IndexFromPoint(e.Location);
+                        if (curWeek.SelectedIndex != -1)
+                        {
+                            ContextMenu.Show();
+                        }
+                        break;
                 }
+                //select the item under the mouse pointer
+                
             }
         }
-        void rayonsContextMenu_Del(object sender, ToolStripItemClickedEventArgs e)
+        void ContextMenu_Del(object sender, ToolStripItemClickedEventArgs e)
         {
-            ToolStripItem item = e.ClickedItem;
-            Rayons.Items.Remove(Rayons.SelectedItem);
-            list.Remove(list.Co);
+            ContextMenuStrip menu = sender as ContextMenuStrip;
+            Control sourceControl = menu.SourceControl;
+            switch (sourceControl.Name)
+            {
+                case "Rayons":
+                   list.Remove(list[Rayons.SelectedIndex]);
+                    Rayons.Items.Remove(Rayons.SelectedItem);
+                    break;
+                case "wednesdayReports":
+                    weekList.Remove(weekList[wednesdayReports.SelectedIndex]);
+                    wednesdayReports.Items.Remove(wednesdayReports.SelectedItem);
+                    break;
+                case "prevWeek":
+                    prevWeekList.Remove(prevWeekList[prevWeek.SelectedIndex]);
+                    prevWeek.Items.Remove(prevWeek.SelectedItem);
+                    break;
+                case "curWeek":
+                    curWeekList.Remove(curWeekList[curWeek.SelectedIndex]);
+                    curWeek.Items.Remove(curWeek.SelectedItem);
+                    break;
+            }
+            
+            
         }
-        private void rayonsContextMenu_Opening(object sender, CancelEventArgs e)
+        private void ContextMenu_Opening(object sender, CancelEventArgs e)
         {
             //clear the menu and add custom items
-            rayonsContextMenu.Items.Clear();
-            rayonsContextMenu.Items.Add(string.Format("Удалить - {0}", Rayons.SelectedItem.ToString()));
+            ContextMenu.Items.Clear();
+            ContextMenu.Items.Add("Удалить");
         }
         public void AddFiles_Click(object sender, System.EventArgs e)
         {
@@ -65,7 +135,7 @@ namespace Monitoring
             openFileDialog1.Filter = "Файлы Excel (*.xls; *.xlsx) | *.xls; *.xlsx";
             openFileDialog1.Multiselect = true;
             openFileDialog1.Title = "Выберите файлы";
-
+            
             // Show the Dialog.
             // If the user clicked OK in the dialog and
             // a .CUR file was selected, open it.
@@ -73,61 +143,211 @@ namespace Monitoring
             {
                 foreach (String file in openFileDialog1.FileNames)
                 {
-                    Rayons.Items.Add(Path.GetFileName(file));
-                    list.Add(file);
-                    
-                }
-                list.Sort();
-                if (dayReportRB.Checked)
-                {
-                    fileCount.Text = Rayons.Items.Count.ToString() + @" \ 26";
-                }
-                else
-                {
-                    fileCount.Text = Rayons.Items.Count.ToString() + @" \ 2";
-                }
-                if ((Rayons.Items.Count == 26) && (dayReportRB.Checked))
-                {
-                    Check.Enabled = true;
-                }
-                else
-                {
-                    if ((Rayons.Items.Count == 2) && (w2w.Checked))
+                    switch (((Button)sender).Name)
                     {
-                        Check.Enabled = true;
+                        case "AddFiles":
+                            Rayons.Items.Add(Path.GetFileName(file));
+                            list.Add(file);
+                            break;
+                        case "AddWeekFiles":
+                            wednesdayReports.Items.Add(Path.GetFileName(file));
+                            weekList.Add(file);
+                            break;
+                        case "prevWeekBtn":
+                            prevWeek.Items.Add(Path.GetFileName(file));
+                            prevWeekList.Add(file);
+                            break;
+                        case "curWeekBtn":
+                            curWeek.Items.Add(Path.GetFileName(file));
+                            curWeekList.Add(file);
+                            break;
                     }
-                }
-            }
+             }
+          }
+   }
+
+        private void Over10Report_Click(object sender, EventArgs e)
+        {
+           Over10Report();
         }
 
+        private void weekReportBtn_Click(object sender, EventArgs e)
+        {
+            WeekReport();
+        }
+
+        public void CheckAndReporting(object sender, System.EventArgs e)
+        {
+            if (Process.GetProcessesByName("Excel").Any())
+            {
+                MessageBox.Show("Закройте 'Excel' и повторите попытку");
+            }
+            else
+            {
+                if (!CheckFile())
+                {
+                    DailyReport();
+                }
+                else
+                {
+                    MessageBox.Show("В ходе проверки файлов обнаружены ошибки. Список ошибок приведен ниже.");
+                    dayReportPB.Value = dayReportPB.Maximum;
+                }
+            }
+
+        }
+
+        public void Over10Report()
+        {
+            int[] stat_col = new int[] { 8, 17, 26, 39, 44, 47 };
+            int i, j, k, nFile;
+            File.Copy(over10OutTemplates, over10OutPath, true);
+            SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
+          //  ExcelFile oFile = ExcelFile.Load(over10OutPath);
+            over10PB.Value = 0;
+            for (nFile = 0; nFile < curWeekList.Count; nFile++)
+            {
+                ExcelFile curFile = ExcelFile.Load(curWeekList[nFile].ToString());
+                ExcelFile prevFile = ExcelFile.Load(prevWeekList[nFile].ToString());
+                int row = 4, district = nFile;
+
+                for (k = stat_col.GetLowerBound(0); k <= stat_col.GetUpperBound(0); k++)
+                {
+                    if (k == stat_col.GetLowerBound(0))
+                    {
+                        i = 2;
+                    }
+                    else
+                    {
+                        if (k == stat_col.GetUpperBound(0))
+                        {
+                            i = stat_col[k - 1] + 1;
+                        }
+                        else
+                        {
+                            i = stat_col[k - 1] + 3;
+                        }
+                    }
+                    while (i < stat_col[k])
+                    {
+                        String product, chain, store, min_max;
+                        float before, after, diff;
+                        
+                        chain = curFile.Worksheets.ActiveWorksheet.Cells[2, i].GetFormattedValue();
+                        store = curFile.Worksheets.ActiveWorksheet.Cells[3, i].GetFormattedValue();
+                        min_max = curFile.Worksheets.ActiveWorksheet.Cells[4, i].GetFormattedValue();
+
+                        for (j = 0; j < rowNum; j++)
+                        {
+                            string curVal = curFile.Worksheets.ActiveWorksheet.Cells[j + rowOffset, i].GetFormattedValue();
+                            string prevVal = prevFile.Worksheets.ActiveWorksheet.Cells[j + rowOffset, i].GetFormattedValue();
+                            if (String.IsNullOrEmpty(curVal) && String.IsNullOrEmpty(prevVal))
+                            {
+                                diff = 0;
+                            }
+                            else
+                            {
+                                if (String.IsNullOrEmpty(curVal))
+                                {
+                                    diff = -100;
+                                }
+                                else 
+                                {
+                                    if (String.IsNullOrEmpty(prevVal))
+                                    {
+                                        diff = 100;
+                                    }
+                                    else
+                                    {
+                                        diff = (float.Parse(curVal) - float.Parse(prevVal)) / float.Parse(prevVal) * 100;
+                                        if (diff >= 10)
+                                        {
+                                            product = curFile.Worksheets.ActiveWorksheet.Cells[j + rowOffset, 1].GetFormattedValue();
+                                            before = float.Parse(prevFile.Worksheets.ActiveWorksheet.Cells[j + rowOffset, i].GetFormattedValue());
+                                            after = float.Parse(curFile.Worksheets.ActiveWorksheet.Cells[j + rowOffset, i].GetFormattedValue());
+
+
+                                            WriteToOver10(row, district, product, chain, store, min_max, before, after, diff);
+                                            row++;
+                                        }
+                                    }
+                                }
+                            }
+                           
+
+                        }
+                        i++;
+                    }
+                }
+                over10PB.Value += 4;
+            }
+          // oFile.Save(over10OutPath);
+        }
+
+        public void WriteToOver10(int row, int district, String product, String chain, String store, String min_max, float before, float after, float diff)
+        {
+            SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
+            ExcelFile oFile = ExcelFile.Load(over10OutPath);
+
+            oFile.Worksheets.ActiveWorksheet.Cells[row, district*8].Value = product;
+            oFile.Worksheets.ActiveWorksheet.Cells[row, district * 8 + 1].Value = chain;
+            oFile.Worksheets.ActiveWorksheet.Cells[row, district * 8 + 2].Value = store;
+            oFile.Worksheets.ActiveWorksheet.Cells[row, district * 8 + 3].Value = min_max;
+            oFile.Worksheets.ActiveWorksheet.Cells[row, district * 8 + 4].Value = before;
+            oFile.Worksheets.ActiveWorksheet.Cells[row, district * 8 + 5].Value = after;
+            oFile.Worksheets.ActiveWorksheet.Cells[row, district * 8 + 6].Value = diff;
+
+            oFile.Save(over10OutPath);
+        }
+
+ 
         public void WeekReport()
         {
             int[] dayColNum = new int[] { 2, 5, 8, 11, 14, 17 };
             int[] reportColNum = new int[] { 2, 8, 14, 20, 26, 32 };
+            bool isPercent = false;
 
-            File.Copy(weekOutTemplates, weekOutPath);
+            File.Copy(weekOutTemplates, weekOutPath, true);
             SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
             ExcelFile oFile = ExcelFile.Load(weekOutPath);
+            TreeNode efile = new TreeNode(Path.GetFileName(weekOutPath));
+            weekReportPB.Value = 0;
 
             for (int i = dayColNum.GetLowerBound(0); i <= dayColNum.GetUpperBound(0); i++)
             {
-                WriteColumn(reportColNum[i], AvgWednesday(dayColNum[i],1), oFile);
-                WriteColumn(reportColNum[i] + 1, CompareWednesday(reportColNum[i] + 1, AvgWednesday(dayColNum[i], 1), AvgWednesday(dayColNum[i], 2)), oFile);
-                WriteColumn(reportColNum[i] + 2, AvgWednesday(dayColNum[i] + 1,1), oFile);
-                WriteColumn(reportColNum[i] + 3, CompareWednesday(reportColNum[i] + 3, AvgWednesday(dayColNum[i] + 1, 1), AvgWednesday(dayColNum[i] + 1, 2)), oFile);
-                WriteColumn(reportColNum[i] + 4, AvgWednesday(dayColNum[i] + 2,1), oFile);
-                WriteColumn(reportColNum[i] + 5, CompareWednesday(reportColNum[i] + 5, AvgWednesday(dayColNum[i]+2,1), AvgWednesday(dayColNum[i] + 2, 2)), oFile);
+                for (int j = 0; j < 6; j++)
+                {
+                    int colNum = reportColNum[i] + j;
+                   if ((colNum == 7) || (colNum == 13) || (colNum == 19) || (colNum == 25) || (colNum == 31) ||
+                   (colNum == 37))
+                    {
+                        isPercent = true;
+                    }
+                    if (j%2 == 0)
+                    {
+                        WriteColumn(colNum, LoadFromFile(dayColNum[i]+j/2, weekList[weekList.Count - 1].ToString()), oFile);
+                    }
+                    else
+                    {
+                        WriteColumn(colNum, CompareTwoDays(LoadFromFile(dayColNum[i]+ (int)Math.Floor((double)j / 2), weekList[weekList.Count - 1].ToString()), LoadFromFile(dayColNum[i]+(int)Math.Floor((double)j / 2), weekList[weekList.Count - 2].ToString()), isPercent), oFile);
+                    }
+                }
+                weekReportPB.Value += 17;
 
             }
             oFile.Save(weekOutPath);
+            efile.Nodes.Add(new TreeNode("Ошибок нет"));
+            weekReportLog.Nodes.Add(efile);
+            weekReportLog.ExpandAll();
+            MessageBox.Show("Отчёт готов");
         }
 
-        public float[] AvgWednesday(int colNum, int elementOffset)
+        public float[] LoadFromFile(int colNum, String filePath)
         {
             float[] colVals = new float[rowNum];
 
                 SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
-                ExcelFile ef = ExcelFile.Load(list[list.Count-elementOffset].ToString());
+                ExcelFile ef = ExcelFile.Load(filePath);
                 ExcelWorksheet ws = ef.Worksheets.ActiveWorksheet;
 
                 for (int j = 0; j < rowNum; j++)
@@ -138,17 +358,13 @@ namespace Monitoring
             return colVals;
         }
 
-        public float[] CompareWednesday(int colNum, float[] curDay, float[] prevDay)
+        public float[] CompareTwoDays(float[] curDay, float[] prevDay, bool isPerscent)
         {
             float[] resVals = new float[rowNum];
-            SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
-            ExcelFile ef = ExcelFile.Load(list[list.Count-2].ToString());
-            ExcelWorksheet ws = ef.Worksheets.ActiveWorksheet;
-
+            
             for (int j = 0; j < rowNum; j++)
             {
-                if ((colNum == 7) || (colNum == 13) || (colNum == 19) || (colNum == 25) || (colNum == 31) ||
-                    (colNum == 37))
+                if ( isPerscent == true) 
                 {
                     resVals[j] = curDay[j] - prevDay[j];
                 }
@@ -221,8 +437,9 @@ namespace Monitoring
         {
             int[] dayColNum = new int[] { 8, 17, 26, 39, 42, 45 };
             int[] reportColNum = new int[] { 2, 5, 8, 11, 14, 17 };
+            dayReportPB.Value = 52;
 
-            File.Copy(dayOutTemplates, dayOutPath);
+            File.Copy(dayOutTemplates, dayOutPath, true);
             SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
             ExcelFile oFile = ExcelFile.Load(dayOutPath);
             
@@ -231,15 +448,20 @@ namespace Monitoring
                 WriteColumn(reportColNum[i], AvgDaySum(dayColNum[i]), oFile);
                 WriteColumn(reportColNum[i]+1, AvgDaySum(dayColNum[i]+1), oFile);
                 WriteColumn(reportColNum[i]+2, AvgDaySum(dayColNum[i]+2), oFile);
+                dayReportPB.Value += 2;
+                Application.DoEvents();
             }
+            dayReportPB.Value = dayReportPB.Maximum;
             oFile.Save(dayOutPath);
+            MessageBox.Show("Отчёт готов");
         }
 
-        public void CheckFile()
+        public bool CheckFile()
         {
             int[] stat_col = new int[] { 8, 17, 26, 39, 44, 47 };
             int i, j, k;
             bool flag = false;
+            dayReportPB.Value = 0;
             foreach (String file in list)
             {
                 SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
@@ -252,7 +474,7 @@ namespace Monitoring
                     for (j = 2; j < 48; j++)
                     {
                         var numberFormat = ws.Cells[i, j].Style.NumberFormat;
-                        if ((numberFormat != "0.00") && (numberFormat != "#,##0.00"))
+                        if ((numberFormat != "0.00") && (numberFormat != "#,##0.00") && (numberFormat != "General") && (numberFormat != "#,##0") && (numberFormat != "0") && (numberFormat != "0.0"))
                         {
                             if (String.IsNullOrEmpty(ws.Cells[i, j].GetFormattedValue()))
                             {
@@ -308,6 +530,7 @@ namespace Monitoring
                     }
 
                 }
+                // после проверки каждого файла
                 if (flag == false)
                 {
                     efile.Nodes.Add(new TreeNode("Ошибок нет"));
@@ -316,27 +539,19 @@ namespace Monitoring
                 }
                 else
                 {
-                    MessageBox.Show("В ходе проверки файлов обнаружены ошибки. Список ошибок приведен ниже.");
                     Errors.Nodes.Add(efile);
                     Errors.ExpandAll();
                 }
+                dayReportPB.Value += 2;
+                Application.DoEvents();
 
             }
+
+
+            return flag;
         }
        
-        public void CheckAndReporting(object sender, System.EventArgs e)
-        {
-            if (Process.GetProcessesByName("Excel").Any())
-            {
-                MessageBox.Show("Закройте 'Excel' и повторите попытку");
-            }
-            else
-            {
-                CheckFile();
-                
-            }
 
-            }
         }
     }
     
