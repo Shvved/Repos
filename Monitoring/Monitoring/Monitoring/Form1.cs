@@ -56,7 +56,7 @@ namespace Monitoring
            
         }
 
-       private void listBox1_MouseDown(object sender, MouseEventArgs e)
+        private void listBox1_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
@@ -95,6 +95,7 @@ namespace Monitoring
                 
             }
         }
+
         void ContextMenu_Del(object sender, ToolStripItemClickedEventArgs e)
         {
             ContextMenuStrip menu = sender as ContextMenuStrip;
@@ -121,12 +122,14 @@ namespace Monitoring
             
             
         }
+
         private void ContextMenu_Opening(object sender, CancelEventArgs e)
         {
             //clear the menu and add custom items
             ContextMenu.Items.Clear();
             ContextMenu.Items.Add("Удалить");
         }
+
         public void AddFiles_Click(object sender, System.EventArgs e)
         {
             // Displays an OpenFileDialog so the user can select a Cursor.
@@ -143,28 +146,84 @@ namespace Monitoring
             {
                 foreach (String file in openFileDialog1.FileNames)
                 {
-                    switch (((Button)sender).Name)
+                   switch (((Button)sender).Name)
                     {
                         case "AddFiles":
                             Rayons.Items.Add(Path.GetFileName(file));
                             list.Add(file);
+                            CheckFileCount("Rayons");
                             break;
                         case "AddWeekFiles":
                             wednesdayReports.Items.Add(Path.GetFileName(file));
                             weekList.Add(file);
+                            CheckFileCount("wednesdayReports");
                             break;
                         case "prevWeekBtn":
                             prevWeek.Items.Add(Path.GetFileName(file));
                             prevWeekList.Add(file);
+                            CheckFileCount("prevWeek");
                             break;
                         case "curWeekBtn":
                             curWeek.Items.Add(Path.GetFileName(file));
                             curWeekList.Add(file);
+                            CheckFileCount("curWeek");
                             break;
                     }
              }
           }
    }
+
+        public void CheckFileCount(String listName)
+        {
+            bool flag = false;
+            switch (listName)
+            {
+                case "Rayons":
+                    if (Rayons.Items.Count == 26)
+                    {
+                        Errors.Nodes.Add("Файлов в списке:" + Rayons.Items.Count + @" \ 26");
+                        Check.Enabled = true;
+                    }
+                    else
+                    {
+                        Errors.Nodes.Add("Файлов в списке:" + Rayons.Items.Count + @" \ 26");
+                    }
+                    break;
+                case "wednesdayReports":
+                    if (wednesdayReports.Items.Count == 2)
+                    {
+                        weekReportLog.Nodes.Add("Файлов в списке:" + wednesdayReports.Items.Count + @" \ 2");
+                        weekReportBtn.Enabled = true;
+                    }
+                    else
+                    {
+                        weekReportLog.Nodes.Add("Файлов в списке:" + wednesdayReports.Items.Count + @" \ 2");
+                    }
+                    break;
+                case "prevWeek":
+                    if ((prevWeek.Items.Count == 26) && (curWeek.Items.Count == 26))
+                    {
+                        over10Log.Nodes.Add("Файлов в первом списке:" + prevWeek.Items.Count + @" \ 26");
+                        over10Report.Enabled = true;
+                    }
+                    else
+                    {
+                        over10Log.Nodes.Add("Файлов в первом списке:" + prevWeek.Items.Count + @" \ 26");
+                    }
+                    break;
+                case "curWeek":
+                    if ((prevWeek.Items.Count == 26) && (curWeek.Items.Count == 26))
+                    {
+                        over10Log.Nodes.Add("Файлов во втором списке:" + curWeek.Items.Count + @" \ 26");
+                        over10Report.Enabled = true;
+                    }
+                    else
+                    {
+                        over10Log.Nodes.Add("Файлов во втором списке:" + curWeek.Items.Count + @" \ 26");
+                    }
+                    break;
+            }
+        }
 
         private void Over10Report_Click(object sender, EventArgs e)
         {
@@ -299,8 +358,7 @@ namespace Monitoring
 
             oFile.Save(over10OutPath);
         }
-
- 
+        
         public void WeekReport()
         {
             int[] dayColNum = new int[] { 2, 5, 8, 11, 14, 17 };
@@ -550,9 +608,12 @@ namespace Monitoring
 
             return flag;
         }
-       
+
+        private void Monitoring_Load(object sender, EventArgs e)
+        {
 
         }
+    }
     }
     
 

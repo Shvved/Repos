@@ -33,6 +33,7 @@ namespace Monitoring
         public void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Monitoring));
             this.AddFiles = new System.Windows.Forms.Button();
             this.Check = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
@@ -50,6 +51,7 @@ namespace Monitoring
             this.wednesdayReports = new System.Windows.Forms.ListBox();
             this.AddWeekFiles = new System.Windows.Forms.Button();
             this.over10Tab = new System.Windows.Forms.TabPage();
+            this.over10Log = new System.Windows.Forms.TreeView();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.over10PB = new System.Windows.Forms.ProgressBar();
@@ -78,6 +80,7 @@ namespace Monitoring
             // Check
             // 
             this.Check.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Check.Enabled = false;
             this.Check.Location = new System.Drawing.Point(6, 381);
             this.Check.Name = "Check";
             this.Check.Size = new System.Drawing.Size(160, 23);
@@ -198,6 +201,7 @@ namespace Monitoring
             // 
             // weekReportBtn
             // 
+            this.weekReportBtn.Enabled = false;
             this.weekReportBtn.Location = new System.Drawing.Point(6, 381);
             this.weekReportBtn.Name = "weekReportBtn";
             this.weekReportBtn.Size = new System.Drawing.Size(160, 23);
@@ -226,6 +230,7 @@ namespace Monitoring
             // over10Tab
             // 
             this.over10Tab.BackColor = System.Drawing.SystemColors.Control;
+            this.over10Tab.Controls.Add(this.over10Log);
             this.over10Tab.Controls.Add(this.label2);
             this.over10Tab.Controls.Add(this.label1);
             this.over10Tab.Controls.Add(this.over10PB);
@@ -242,11 +247,18 @@ namespace Monitoring
             this.over10Tab.TabIndex = 2;
             this.over10Tab.Text = "Сверх 10%";
             // 
+            // over10Log
+            // 
+            this.over10Log.Location = new System.Drawing.Point(409, 48);
+            this.over10Log.Name = "over10Log";
+            this.over10Log.Size = new System.Drawing.Size(277, 275);
+            this.over10Log.TabIndex = 8;
+            // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label2.Location = new System.Drawing.Point(470, 31);
+            this.label2.Location = new System.Drawing.Point(191, 28);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(118, 17);
             this.label2.TabIndex = 7;
@@ -256,7 +268,7 @@ namespace Monitoring
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label1.Location = new System.Drawing.Point(120, 31);
+            this.label1.Location = new System.Drawing.Point(6, 28);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(121, 17);
             this.label1.TabIndex = 6;
@@ -264,16 +276,17 @@ namespace Monitoring
             // 
             // over10PB
             // 
-            this.over10PB.Location = new System.Drawing.Point(156, 379);
+            this.over10PB.Location = new System.Drawing.Point(409, 369);
             this.over10PB.Maximum = 104;
             this.over10PB.Name = "over10PB";
-            this.over10PB.Size = new System.Drawing.Size(377, 23);
+            this.over10PB.Size = new System.Drawing.Size(277, 23);
             this.over10PB.TabIndex = 5;
             // 
             // over10Report
             // 
+            this.over10Report.Enabled = false;
             this.over10Report.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.over10Report.Location = new System.Drawing.Point(297, 342);
+            this.over10Report.Location = new System.Drawing.Point(409, 327);
             this.over10Report.Name = "over10Report";
             this.over10Report.Size = new System.Drawing.Size(93, 36);
             this.over10Report.TabIndex = 4;
@@ -282,7 +295,7 @@ namespace Monitoring
             // 
             // curWeekBtn
             // 
-            this.curWeekBtn.Location = new System.Drawing.Point(496, 6);
+            this.curWeekBtn.Location = new System.Drawing.Point(194, 6);
             this.curWeekBtn.Name = "curWeekBtn";
             this.curWeekBtn.Size = new System.Drawing.Size(75, 23);
             this.curWeekBtn.TabIndex = 3;
@@ -291,7 +304,7 @@ namespace Monitoring
             // 
             // prevWeekBtn
             // 
-            this.prevWeekBtn.Location = new System.Drawing.Point(146, 6);
+            this.prevWeekBtn.Location = new System.Drawing.Point(9, 6);
             this.prevWeekBtn.Name = "prevWeekBtn";
             this.prevWeekBtn.Size = new System.Drawing.Size(75, 23);
             this.prevWeekBtn.TabIndex = 2;
@@ -301,18 +314,18 @@ namespace Monitoring
             // curWeek
             // 
             this.curWeek.FormattingEnabled = true;
-            this.curWeek.Location = new System.Drawing.Point(371, 48);
+            this.curWeek.Location = new System.Drawing.Point(194, 48);
             this.curWeek.Name = "curWeek";
-            this.curWeek.Size = new System.Drawing.Size(315, 290);
+            this.curWeek.Size = new System.Drawing.Size(172, 342);
             this.curWeek.Sorted = true;
             this.curWeek.TabIndex = 1;
             // 
             // prevWeek
             // 
             this.prevWeek.FormattingEnabled = true;
-            this.prevWeek.Location = new System.Drawing.Point(3, 48);
+            this.prevWeek.Location = new System.Drawing.Point(9, 48);
             this.prevWeek.Name = "prevWeek";
-            this.prevWeek.Size = new System.Drawing.Size(316, 290);
+            this.prevWeek.Size = new System.Drawing.Size(172, 342);
             this.prevWeek.Sorted = true;
             this.prevWeek.TabIndex = 0;
             // 
@@ -324,10 +337,12 @@ namespace Monitoring
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.errorMessage);
             this.Controls.Add(this.fileCount);
-            this.MaximumSize = new System.Drawing.Size(720, 700);
-            this.MinimumSize = new System.Drawing.Size(369, 474);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximumSize = new System.Drawing.Size(720, 474);
+            this.MinimumSize = new System.Drawing.Size(720, 474);
             this.Name = "Monitoring";
             this.Text = "Мониторинг";
+            this.Load += new System.EventHandler(this.Monitoring_Load);
             this.tabControl1.ResumeLayout(false);
             this.dayTab.ResumeLayout(false);
             this.weekTab.ResumeLayout(false);
@@ -366,6 +381,7 @@ namespace Monitoring
         private Button over10Report;
         private Label label2;
         private Label label1;
+        private TreeView over10Log;
     }
 }
 
